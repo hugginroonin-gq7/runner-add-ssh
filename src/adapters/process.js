@@ -76,7 +76,7 @@ async function spawnAsync(command, args = [], options = {}) {
 /**
  * Execute command with sudo fallback
  * 
- * Strategy: Try without sudo first. If EACCES/EPERM, retry with sudo.
+ * Strategy: Try with sudo first (when available). If sudo fails, fallback to non-sudo.
  * 
  * @param {Array<string>} args - Command and arguments (e.g., ['apt-get', 'update'])
  * @param {Logger} logger - Logger instance
@@ -84,47 +84,40 @@ async function spawnAsync(command, args = [], options = {}) {
  */
 async function execSudo(args, logger) {
   const [command, ...cmdArgs] = args;
+  const commandLabel = `${command} ${cmdArgs.join(' ')}`.trim();
+  let sudoError;
+
+  const isWindows = process.platform === 'win32';
+
+  if (!isWindows) {
+    const sudoAvailable = await checkCommand('sudo', logger);
+    if (sudoAvailable) {
+      try {
+        logger.debug(`Executing with sudo: ${commandLabel}`);
+        return await spawnAsync('sudo', ['-n', ...args], { logger });
+      } catch (error) {
+        sudoError = error;
+        logger.warn(`Sudo execution failed for "${commandLabel}". Falling back to non-sudo. Reason: ${error.message}`);
+      }
+    } else if (!canSudo()) {
+      logger.warn(`Sudo is not available; executing "${commandLabel}" without sudo.`);
+    }
+  }
 
   try {
-    // Try without sudo first
-    logger.debug(`Executing: ${args.join(' ')}`);
+    logger.debug(`Executing: ${commandLabel}`);
     return await spawnAsync(command, cmdArgs, { logger });
   } catch (error) {
-    // If permission denied, retry with sudo
-    if (error.message.includes('EACCES') || 
-        error.message.includes('EPERM') || 
-        error.message.includes('Permission denied') ||
-        error.code === 'EACCES') {
-      
-      logger.debug(`Permission denied, retrying with sudo...`);
-      
-      // Check if sudo is available
-      if (process.platform !== 'win32') {
-        const sudoAvailable = await checkCommand('sudo', logger);
-        if (!sudoAvailable) {
-          throw new ProcessError('Command requires elevated privileges, but sudo is not available. Run as root or install/configure sudo.');
-        }
-
-        try {
-          return await spawnAsync('sudo', ['-n', ...args], { logger });
-        } catch (sudoError) {
-          const sudoMessage = sudoError.message || '';
-          const requiresPassword = sudoMessage.includes('password') || sudoMessage.includes('a terminal is required') || sudoMessage.includes('no tty');
-
-          if (!process.stdin.isTTY || requiresPassword) {
-            throw new ProcessError('Command requires sudo privileges, but non-interactive sudo is not available. Re-run with passwordless sudo or as root.');
-          }
-
-          logger.debug('Sudo requires password, trying interactive sudo...');
-          return await spawnAsync('sudo', args, { logger, captureOutput: false });
-        }
-      } else {
-        // Windows doesn't have sudo
-        throw error;
-      }
-    } else {
-      throw error;
+    if (sudoError) {
+      throw new ProcessError(
+        `Command failed with sudo and without sudo: ${commandLabel}\n` +
+        `Sudo error: ${sudoError.message}\n` +
+        `Non-sudo error: ${error.message}\n` +
+        'Hint: Ensure you have sufficient privileges or run with passwordless sudo.'
+      );
     }
+
+    throw error;
   }
 }
 
