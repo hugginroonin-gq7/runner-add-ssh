@@ -1,0 +1,29 @@
+# Development files
+.runner-data/
+examples/
+scripts/
+tests/
+*.log
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+azure-pipelines.yml
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.md.bak
+TODO.md

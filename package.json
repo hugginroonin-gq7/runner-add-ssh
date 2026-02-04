@@ -1,0 +1,45 @@
+{
+  "name": "runner-add-ssh",
+  "version": "1.0.0",
+  "description": "Add SSH server to enable remote access with private key (Windows/Linux-Ubuntu, CI/CD ready)",
+  "main": "src/index.js",
+  "bin": {
+    "runner-add-ssh": "bin/runner-add-ssh.js"
+  },
+  "scripts": {
+    "version:bump": "node scripts/version.js",
+    "publish:npm": "node scripts/publish.js",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "ssh",
+    "runner",
+    "ci-cd",
+    "github-actions",
+    "azure-pipelines",
+    "openssh",
+    "windows",
+    "linux",
+    "ubuntu"
+  ],
+  "author": "hugginroonin-gq7",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "cross-spawn": "^7.0.3"
+  },
+  "devDependencies": {},
+  "files": [
+    "bin/",
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hugginroonin-gq7/runner-add-ssh.git"
+  }
+}
