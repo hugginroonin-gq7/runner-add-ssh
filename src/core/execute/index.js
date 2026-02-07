@@ -63,6 +63,14 @@ async function execute(plan, config, logger) {
       logger.info('✅ SSH keys setup complete');
       logger.info('');
 
+      if (!config.disableForceCwd) {
+        logger.info('📂 Configuring default SSH login directory...');
+        await linuxExecutor.configureDefaultCwd(config, logger);
+        result.steps.push('default-cwd-configured');
+        logger.info('✅ Default SSH login directory configured');
+        logger.info('');
+      }
+
       logger.info('🚀 Starting SSH service...');
       await linuxExecutor.startSSH(config, logger);
       result.serviceStarted = true;

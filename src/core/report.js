@@ -63,7 +63,7 @@ function report(result, config, logger) {
 
   logger.info('📂 Default Working Directory: ' + config.defaultCwd);
   if (!config.disableForceCwd) {
-    logger.info('   (SSH sessions will start in this directory)');
+    logger.info('   (Interactive SSH shell sessions will start in this directory)');
   }
   logger.info('');
 
